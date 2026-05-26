@@ -3,8 +3,8 @@ locals {
 
   resource_group_name     = "rg-${var.app_code}-backup-${var.environment}-${local.region_code}"
   vault_name              = "rsv-${var.app_code}-backup-${var.environment}-${local.region_code}"
-  law_resource_group_name = "rg-ds-lz-prd-nzn"
-  law_name                = "log-ds-prd-nzn"
+  law_resource_group_name = "rg-${var.app_code}-log-${var.environment}-${local.region_code}"
+  law_name                = "log-${var.app_code}-${var.environment}-${local.region_code}"
   action_group_ops        = "ag-${var.app_code}-backup-ops-${local.region_code}-${var.environment}"
   action_group_sec        = "ag-${var.app_code}-backup-sec-${local.region_code}-${var.environment}"
 

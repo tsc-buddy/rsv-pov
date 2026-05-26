@@ -2,7 +2,7 @@
 
 Terraform code to deploy Azure Backup infrastructure using [Azure Verified Modules (AVM)](https://aka.ms/avm).
 
-This module provisions a Recovery Services Vault with three backup policies (VM, SQL Server, Azure Files), a private endpoint, local Private DNS zone resolution, and a full monitoring stack (action groups + alert rules) backed by a pre-existing Log Analytics Workspace. All resources are deployed into **New Zealand North** and named using a consistent `<type>-<purpose>-<environment>-<region>` convention.
+This module provisions a Recovery Services Vault with three backup policies (VM, SQL Server, Azure Files), a private endpoint, local Private DNS zone resolution, and a full monitoring stack (action groups + alert rules) backed by a dedicated Log Analytics Workspace. All resources are deployed into **New Zealand North** and named using a consistent `<type>-<purpose>-<environment>-<region>` convention.
 
 ---
 
@@ -77,9 +77,9 @@ Action groups, alert rules, Private DNS zones, and VNet links use native `azurer
 | Resource | Name (app_code=ccc, env=npd) | Notes |
 |---|---|---|
 | Resource Group (backup) | `rg-ccc-backup-npd-nzn` | Contains vault, PE, DNS zone, alerts |
-| Resource Group (LAW) | `rg-ds-lz-prd-nzn` | Pre-existing — hardcoded; see [Assumptions](#assumptions) |
+| Resource Group (LAW) | `rg-ccc-log-npd-nzn` | Contains the Log Analytics workspace |
 | Recovery Services Vault | `rsv-ccc-backup-npd-nzn` | LRS, soft delete on, public access disabled |
-| Log Analytics Workspace | `log-ds-prd-nzn` | Pre-existing — hardcoded; see [Assumptions](#assumptions) |
+| Log Analytics Workspace | `log-ccc-npd-nzn` | Receives vault diagnostic logs |
 | Private Endpoint | `pe-rsv-ccc-backup-npd-nzn` | Conditional on `private_endpoint_subnet_id` being set |
 | Private DNS Zone | `privatelink.nzn.backup.windowsazure.com` | In backup RG; linked to spoke VNet |
 | Private DNS Zone VNet Link | `pdnslink-ccc-backup-nzn-npd` | Links DNS zone to the provided VNet |
@@ -241,7 +241,7 @@ terraform apply
 All backup windows are defined in **New Zealand Standard Time** (`New Zealand Standard Time` Windows timezone identifier, UTC+12). VM backups run at 03:00, SQL differentials at 18:00 on weekdays, and file share backups at 22:00 — timed to minimise overlap with business hours.
 
 ### Log Analytics Workspace — Decentralised Model
-This deployment targets a **decentralised Log Analytics model**. Rather than sending backup telemetry to a central platform LAW, it uses a pre-existing workspace (`log-ds-prd-nzn`) in its own resource group (`rg-ds-lz-prd-nzn`). Both names are hardcoded in `locals.tf` because the workspace pre-dates this Terraform root and is managed outside of it. This avoids conflicts with any central workspace IAM or retention policies.
+This deployment targets a **decentralised Log Analytics model**. Rather than sending backup telemetry to a central platform LAW, it provisions a dedicated workspace in its own resource group, both named following the same `<type>-<app_code>-<env>-<region>` convention (e.g. `log-ccc-npd-nzn` / `rg-ccc-log-npd-nzn`). The workspace and its resource group are managed by this Terraform root.
 
 ### Private DNS Zones — Decentralised Model
 This deployment uses **decentralised Private DNS zone management**. The zone `privatelink.nzn.backup.windowsazure.com` and its VNet link are provisioned directly in the backup resource group rather than being registered in a central hub DNS model. If a central hub DNS zone for backup is introduced in future, the `private_endpoints.tf` resources should be removed and the central zone IDs passed in via `private_dns_zone_ids`.
