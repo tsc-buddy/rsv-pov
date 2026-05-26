@@ -169,7 +169,7 @@ All policies are deployed as part of the Recovery Services Vault AVM module. All
 
 ## Getting Started
 
-### 1. Fill in terraform.tfvars
+### 1. Review and complete the terraform.tfvars
 
 ```hcl
 subscription_id = "<your-subscription-id>"
